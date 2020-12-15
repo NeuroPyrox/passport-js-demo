@@ -12,11 +12,17 @@ passport.use(
       // If you omit the protocol, it will use http instead of https
       callbackURL: "https://quiet-loud-sailfish.glitch.me/auth/google/return"
     },
-    accessToken => {
+    (accessToken, refreshToken, profile, done) => {
       console.log("access token: ", accessToken);
+      done(null, {});
     }
   )
 );
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+
+app.use(passport.initialize());
 
 // our default array of dreams
 const dreams = [
@@ -40,9 +46,16 @@ app.get("/dreams", (request, response) => {
   response.json(dreams);
 });
 
-app.get("/auth/google", passport.authenticate("google", {
-  scope: ["profile", "email"]
-}));
+app.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"]
+  })
+);
+
+app.get("/auth/google/return", passport.authenticate("google"), (req, res) =>
+  res.redirect("/")
+);
 
 // listen for requests :)
 const listener = app.listen(process.env.PORT, () => {
